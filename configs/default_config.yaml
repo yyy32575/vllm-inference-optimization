@@ -1,0 +1,58 @@
+# Default benchmark configuration for VLLM inference optimization
+
+server:
+  host: "localhost"
+  port: 8000
+  model: "meta-llama/Llama-2-7b-hf"
+  api_endpoint: "/v1/completions"
+  health_endpoint: "/health"
+  timeout_seconds: 120
+
+workload:
+  # Request length distribution parameters (log-normal)
+  input_length:
+    distribution: "lognormal"
+    mean: 5.5        # ln-scale mean (~245 tokens median)
+    sigma: 1.0       # ln-scale sigma
+    min_tokens: 16
+    max_tokens: 2048
+  output_length:
+    distribution: "lognormal"
+    mean: 4.5        # ln-scale mean (~90 tokens median)
+    sigma: 0.8
+    min_tokens: 8
+    max_tokens: 1024
+  num_requests: 1000
+  concurrency_levels: [1, 4, 8, 16, 32, 64]
+  request_rate: null  # null = send as fast as possible
+
+strategies:
+  batching:
+    modes: ["dynamic", "static"]
+    max_num_batched_tokens_options: [2048, 4096, 8192, 16384]
+    max_num_seqs_options: [64, 128, 256]
+  prefix_cache:
+    enabled_options: [true, false]
+  request_routing:
+    enabled: true
+    short_threshold_tokens: 256
+    long_threshold_tokens: 1024
+
+slo:
+  p95_latency_ms: 3000
+  min_throughput_tokens_per_sec: 500
+  max_gpu_memory_utilization: 0.95
+
+capacity:
+  gpu_budget: 1
+  gpu_type: "A100-80GB"
+  gpu_memory_gb: 80
+  safety_margin: 0.15
+
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    scrape_interval_seconds: 5
+  export_results: true
+  results_dir: "results"

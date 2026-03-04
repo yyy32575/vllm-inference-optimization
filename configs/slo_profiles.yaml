@@ -1,0 +1,41 @@
+# SLO constraint profiles for different service tiers
+
+profiles:
+  realtime:
+    name: "Real-time Interactive"
+    description: "Low-latency for chat/interactive applications"
+    constraints:
+      p50_latency_ms: 500
+      p95_latency_ms: 1500
+      p99_latency_ms: 3000
+      min_throughput_tokens_per_sec: 200
+      max_time_to_first_token_ms: 300
+    priority: "latency"
+    weight_latency: 0.7
+    weight_throughput: 0.3
+
+  batch:
+    name: "Batch Processing"
+    description: "High-throughput for batch inference jobs"
+    constraints:
+      p50_latency_ms: 5000
+      p95_latency_ms: 15000
+      p99_latency_ms: 30000
+      min_throughput_tokens_per_sec: 1000
+      max_time_to_first_token_ms: 2000
+    priority: "throughput"
+    weight_latency: 0.3
+    weight_throughput: 0.7
+
+  balanced:
+    name: "Balanced"
+    description: "Balanced latency and throughput"
+    constraints:
+      p50_latency_ms: 2000
+      p95_latency_ms: 5000
+      p99_latency_ms: 10000
+      min_throughput_tokens_per_sec: 500
+      max_time_to_first_token_ms: 800
+    priority: "balanced"
+    weight_latency: 0.5
+    weight_throughput: 0.5
