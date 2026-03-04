@@ -138,11 +138,13 @@ class CapacityModel:
         model_spec: Optional[ModelSpec] = None,
         safety_margin: float = 0.15,
         gpu_memory_utilization: float = 0.90,
+        cuda_overhead_gb: float = 0.5,
     ):
         self.gpu = gpu_spec or GPUSpec()
         self.model = model_spec or ModelSpec()
         self.safety_margin = safety_margin
         self.gpu_memory_utilization = gpu_memory_utilization
+        self.cuda_overhead_gb = cuda_overhead_gb
 
     def estimate_memory_breakdown(self) -> Dict[str, float]:
         """
@@ -157,8 +159,8 @@ class CapacityModel:
         # Activation memory estimate (~10% of model for typical batch sizes)
         activation_mem = model_mem * 0.10
 
-        # CUDA overhead and framework memory
-        overhead = 0.5  # ~500MB base overhead
+        # CUDA overhead and framework memory (configurable, varies by driver/version)
+        overhead = self.cuda_overhead_gb
 
         kv_cache_budget = max(
             0.0,

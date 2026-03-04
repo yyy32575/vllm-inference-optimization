@@ -18,6 +18,8 @@ from .workload_generator import RequestSample
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_PROMPT = "Hello"
+
 
 @dataclass
 class RequestResult:
@@ -131,7 +133,7 @@ class BenchmarkRunner:
         url = f"{self.server_url}{self.api_endpoint}"
         payload = {
             "model": self.model,
-            "prompt": request.prompt_text or "Hello",
+            "prompt": request.prompt_text or _DEFAULT_PROMPT,
             "max_tokens": request.expected_output_tokens,
             "temperature": 0.0,
             "stream": True,

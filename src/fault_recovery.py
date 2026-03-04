@@ -116,6 +116,7 @@ class FallbackConfig:
     """Configuration for small model fallback."""
 
     primary_model: str = "meta-llama/Llama-2-7b-hf"
+    # In production, set to a smaller/faster model for emergency fallback
     fallback_model: str = "meta-llama/Llama-2-7b-hf"
     fallback_server_url: str = "http://localhost:8001"
     use_fallback_threshold: ServiceHealth = ServiceHealth.CRITICAL

@@ -163,6 +163,12 @@ def main():
         action="store_true",
         help="Only run capacity analysis and workload generation (no live benchmark)",
     )
+    parser.add_argument(
+        "--num-requests",
+        type=int,
+        default=100,
+        help="Number of requests to use for benchmarking (default: 100)",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -210,7 +216,7 @@ def main():
     for strategy_config in configs:
         logger.info("Running benchmark with config: %s", strategy_config.name)
         result = runner.run_benchmark_sync(
-            requests=requests[:100],  # Use subset for quick testing
+            requests=requests[:args.num_requests],
             concurrency=16,
             config_name=strategy_config.name,
         )
