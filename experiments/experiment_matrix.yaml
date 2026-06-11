@@ -1,0 +1,124 @@
+# vLLM 推理优化实验矩阵
+# 通过系统性扫描参数空间，找到 SLO 约束下的最优配置
+
+experiments:
+  # 实验1: 动态 vs 静态 Batching 对比
+  - id: "exp_001_batching_strategy"
+    name: "Batching Strategy Comparison"
+    description: "对比动态/静态批处理对吞吐与延迟的影响"
+    
+    parameters:
+      scheduling_strategy:
+        - "fcfs"              # Static FIFO
+        - "priority_queue"    # Dynamic batching
+      
+      max_num_seqs: [64, 128, 256]
+      max_num_batched_tokens: [4096, 8192, 16384]
+    
+    expected_results:
+      throughput_improvement: "15-25%"
+      p95_latency_improvement: "10-20%"
+      gpu_utilization_gain: "8-12%"
+  
+  # 实验2: Prefix Cache 影响分析
+  - id: "exp_002_prefix_caching"
+    name: "Prefix Cache Impact Analysis"
+    description: "评估 Prefix Cache 对不同请求长度分布的影响"
+    
+    parameters:
+      enable_prefix_caching: [false, true]
+      request_length_distribution:
+        - type: "short"      # mean=200 tokens
+          ratio: 0.3
+        - type: "medium"     # mean=512 tokens
+          ratio: 0.5
+        - type: "long"       # mean=1024 tokens
+          ratio: 0.2
+    
+    expected_results:
+      throughput_improvement: "20-35%"
+      memory_footprint_reduction: "15-25%"
+      latency_reduction: "5-15%"
+  
+  # 实验3: 长短请求分流策略
+  - id: "exp_003_request_segregation"
+    name: "Request Segregation Strategy"
+    description: "评估长短请求分流的效果"
+    
+    parameters:
+      segregation_enabled: [false, true]
+      
+      short_request_config:
+        max_num_seqs: 256
+        max_num_batched_tokens: 16384
+        max_model_len: 512
+      
+      long_request_config:
+        max_num_seqs: 64
+        max_num_batched_tokens: 8192
+        max_model_len: 4096
+      
+      segregation_threshold_tokens: 512
+    
+    expected_results:
+      overall_throughput_improvement: "25-40%"
+      p95_latency_reduction: "20-35%"
+      short_request_latency_improvement: "30-45%"
+  
+  # 实验4: KV Cache 量化与优化
+  - id: "exp_004_kv_cache_optimization"
+    name: "KV Cache Optimization"
+    description: "对比 FP16/INT8 量化及不同注意力算法的效果"
+    
+    parameters:
+      kv_cache_dtype: ["float16", "float8", "int8"]
+      attention_backend:
+        - "flashattention"
+        - "flashattention2"
+        - "triton"
+    
+    batch_sizes: [32, 64, 128, 256]
+    sequence_lengths: [512, 1024, 2048, 4096]
+    
+    expected_results:
+      memory_saving: "20-40%"
+      throughput_improvement: "10-20%"
+      latency_impact: "-5% to +5%"
+  
+  # 实验5: 参数搜索（网格搜索）
+  - id: "exp_005_hyperparameter_grid_search"
+    name: "Hyperparameter Grid Search"
+    description: "系统性扫描参数空间找到最优配置"
+    
+    parameters:
+      max_num_seqs: [32, 64, 128, 256, 512]
+      max_num_batched_tokens: [4096, 8192, 12288, 16384, 20480]
+      max_model_len: [2048, 4096, 8192]
+      enable_prefix_caching: [false, true]
+      scheduling_strategy: ["fcfs", "priority_queue"]
+    
+    optimization_objective:
+      primary: "throughput (tokens/sec)"
+      secondary: "p95_latency"
+      constraints:
+        p95_latency_max_ms: 500
+        memory_utilization_max_percent: 90
+        gpu_utilization_min_percent: 70
+
+# 性能指标收集模板
+metrics_collection:
+  latency_percentiles: [50, 75, 90, 95, 99]
+  throughput_metrics:
+    - tokens_per_second
+    - requests_per_second
+    - time_to_first_token
+  resource_metrics:
+    - gpu_memory_utilization
+    - gpu_compute_utilization
+    - cpu_utilization
+    - memory_bandwidth_utilization
+  profiling:
+    - prefill_latency_breakdown
+    - decode_latency_breakdown
+    - attention_compute_time
+    - kv_cache_access_pattern
