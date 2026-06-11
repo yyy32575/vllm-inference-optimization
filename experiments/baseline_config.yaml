@@ -1,0 +1,56 @@
+# vLLM 推理优化基准配置
+# 实验基线：A100 40GB × 1, Llama-2 13B
+
+baseline:
+  model: "meta-llama/Llama-2-13b-hf"
+  gpu_memory: 40  # GB
+  dtype: "float16"
+  gpu_devices: 1
+
+default_vllm_config:
+  max_num_seqs: 256
+  max_model_len: 4096
+  max_num_batched_tokens: 8192
+  enable_prefix_caching: false
+  scheduling_strategy: "fcfs"  # First Come First Serve
+  swap_space: 4  # GB
+
+workload_profile:
+  # 根据真实生产环境统计的请求长度分布
+  input_length_distribution:
+    - percentile: 50
+      tokens: 128
+    - percentile: 75
+      tokens: 256
+    - percentile: 90
+      tokens: 512
+    - percentile: 95
+      tokens: 768
+    - percentile: 99
+      tokens: 1024
+  
+  output_length_distribution:
+    - percentile: 50
+      tokens: 64
+    - percentile: 75
+      tokens: 128
+    - percentile: 90
+      tokens: 256
+    - percentile: 95
+      tokens: 384
+    - percentile: 99
+      tokens: 512
+  
+  request_rate_scenarios:
+    - name: "light"
+      qps: 10
+    - name: "moderate"
+      qps: 50
+    - name: "heavy"
+      qps: 100
+
+slo_targets:
+  p50_latency_ms: 100
+  p95_latency_ms: 500
+  p99_latency_ms: 1000
+  throughput_tokens_per_sec: 5000
